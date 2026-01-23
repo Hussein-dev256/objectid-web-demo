@@ -4,8 +4,8 @@ AI-powered object recognition web application - a browser-based demonstration of
 
 ## Live Demo
 
-- **Frontend**: [https://objectid-demo.vercel.app](https://objectid-demo.vercel.app)
-- **Backend API**: [https://objectid-api.vercel.app](https://objectid-api.vercel.app)
+- **Frontend**: [https://webdemo-frontend.vercel.app](https://webdemo-frontend.vercel.app)
+- **Backend API**: [https://objectid-demo-backend.vercel.app](https://objectid-demo-backend.vercel.app)
 
 ## Tech Stack
 

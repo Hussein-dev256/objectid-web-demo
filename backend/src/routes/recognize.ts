@@ -71,9 +71,12 @@ router.post('/recognize', upload.single('image'), async (req: Request, res: Resp
                 });
             }
 
+            // Log full error for debugging
+            console.error('Full error details:', error);
+
             return res.status(500).json({
                 success: false,
-                error: error.message,
+                error: `Recognition failed: ${error.message}. Please check server logs for details.`,
             });
         }
 

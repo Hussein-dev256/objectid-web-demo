@@ -9,9 +9,17 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
+// Middleware - Accept any localhost port in development
 app.use(cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    origin: (origin, callback) => {
+        // Allow requests with no origin (like mobile apps or curl)
+        if (!origin) return callback(null, true);
+        // Allow any localhost port
+        if (origin.startsWith('http://localhost:')) {
+            return callback(null, true);
+        }
+        callback(new Error('Not allowed by CORS'));
+    },
     credentials: true,
 }));
 
@@ -37,7 +45,7 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 // Start server
 app.listen(PORT, () => {
     console.log(`🚀 ObjectID Backend API running on http://localhost:${PORT}`);
-    console.log(`✓ CORS enabled for: ${process.env.FRONTEND_URL || 'http://localhost:5173'}`);
+    console.log('✓ CORS enabled for: all localhost ports');
 
     // Check if Imagga credentials are configured
     if (process.env.IMAGGA_API_KEY && process.env.IMAGGA_API_SECRET) {

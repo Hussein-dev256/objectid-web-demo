@@ -3,10 +3,12 @@
 **/dist/
 **/build/
 
-# ALL environment files (set in Vercel dashboard instead)
+# Environment files with secrets (set in Vercel dashboard instead)
 **/.env
 **/.env.local
-**/.env.production
+
+# ALLOW .env.production - it only contains public URLs, not secrets
+# This is needed for Vite to use the correct API URL in production builds
 
 # Keep .env.example for documentation (no real values)
 

@@ -3,9 +3,12 @@
 **/dist/
 **/build/
 
-# Environment files
+# ALL environment files (set in Vercel dashboard instead)
 **/.env
 **/.env.local
+**/.env.production
+
+# Keep .env.example for documentation (no real values)
 
 # Logs
 *.log

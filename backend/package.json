@@ -19,5 +19,10 @@
     "nodemon": "^3.1.11",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "@types/busboy": "^1.5.4",
+    "@vercel/node": "^5.5.27",
+    "busboy": "^1.6.0"
   }
 }

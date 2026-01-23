@@ -30,7 +30,7 @@ export default function Annotate() {
         // Load the image element
         createImageElement(file)
             .then((img) => setImage(img))
-            .catch((err) => {
+            .catch(() => {
                 navigate('/demo/error', {
                     state: { error: 'Failed to load image for annotation' },
                 });

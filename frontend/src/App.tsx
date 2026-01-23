@@ -5,20 +5,24 @@ import Annotate from './pages/Annotate';
 import Processing from './pages/Processing';
 import Results from './pages/Results';
 import Error from './pages/Error';
+import Footer from './components/Footer';
 
 function App() {
   return (
     <BrowserRouter>
-      <div className="min-h-screen bg-charcoal-900">
-        <Routes>
-          <Route path="/" element={<Landing />} />
-          <Route path="/demo/input" element={<ImageInput />} />
-          <Route path="/demo/annotate" element={<Annotate />} />
-          <Route path="/demo/processing" element={<Processing />} />
-          <Route path="/demo/results" element={<Results />} />
-          <Route path="/demo/error" element={<Error />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+      <div className="min-h-screen bg-charcoal-900 flex flex-col">
+        <main className="flex-1">
+          <Routes>
+            <Route path="/" element={<Landing />} />
+            <Route path="/demo/input" element={<ImageInput />} />
+            <Route path="/demo/annotate" element={<Annotate />} />
+            <Route path="/demo/processing" element={<Processing />} />
+            <Route path="/demo/results" element={<Results />} />
+            <Route path="/demo/error" element={<Error />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </main>
+        <Footer />
       </div>
     </BrowserRouter>
   );

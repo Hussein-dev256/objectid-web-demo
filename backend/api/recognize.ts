@@ -1,7 +1,10 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import axios from 'axios';
-import FormData from 'form-data';
-import Busboy from 'busboy';
+import type { Readable } from 'stream';
+
+// Use require for CommonJS modules to avoid esModuleInterop issues
+const axios = require('axios');
+const FormData = require('form-data');
+const Busboy = require('busboy');
 
 const IMAGGA_API_URL = 'https://api.imagga.com/v2/tags';
 
@@ -11,9 +14,9 @@ function parseMultipart(req: VercelRequest): Promise<Buffer> {
         const busboy = Busboy({ headers: req.headers });
         let fileBuffer: Buffer | null = null;
 
-        busboy.on('file', (fieldname, file, info) => {
+        busboy.on('file', (fieldname: string, file: Readable, info: { filename: string; encoding: string; mimeType: string }) => {
             const chunks: Buffer[] = [];
-            file.on('data', (chunk) => chunks.push(chunk));
+            file.on('data', (chunk: Buffer) => chunks.push(chunk));
             file.on('end', () => {
                 fileBuffer = Buffer.concat(chunks);
             });
@@ -28,7 +31,7 @@ function parseMultipart(req: VercelRequest): Promise<Buffer> {
         });
 
         busboy.on('error', reject);
-        req.pipe(busboy);
+        (req as unknown as Readable).pipe(busboy);
     });
 }
 
@@ -88,7 +91,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         });
 
         // Extract top 3 results
-        const results = imaggaResponse.data.result.tags.slice(0, 3).map((tag: any, index: number) => ({
+        const results = imaggaResponse.data.result.tags.slice(0, 3).map((tag: { tag: { en: string }; confidence: number }, index: number) => ({
             rank: index + 1,
             label: tag.tag.en,
             confidence: tag.confidence / 100,
@@ -100,19 +103,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             success: true,
             results,
         });
-    } catch (error: any) {
-        console.error('Recognition error:', error.message);
+    } catch (error: unknown) {
+        const err = error as { message?: string; response?: { data?: { status?: { text?: string } } }; isAxiosError?: boolean };
+        console.error('Recognition error:', err.message);
 
-        if (axios.isAxiosError(error) && error.response) {
+        if (err.isAxiosError && err.response) {
             return res.status(500).json({
                 success: false,
-                error: `Imagga API error: ${error.response.data?.status?.text || error.message}`,
+                error: `Imagga API error: ${err.response.data?.status?.text || err.message}`,
             });
         }
 
         return res.status(500).json({
             success: false,
-            error: error.message || 'Recognition failed',
+            error: err.message || 'Recognition failed',
         });
     }
 }

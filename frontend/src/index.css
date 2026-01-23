@@ -1,0 +1,49 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply font-poppins;
+  }
+
+  body {
+    @apply bg-charcoal-900 text-white antialiased;
+  }
+}
+
+@layer components {
+
+  /* Glassmorphism effects */
+  .glass {
+    @apply bg-white/5 backdrop-blur-2xl border border-white/10 rounded-lg;
+  }
+
+  .glass-hover {
+    @apply transition-all duration-300;
+  }
+
+  .glass-hover:hover {
+    @apply bg-white/10 border-white/20;
+  }
+
+  /* Button styles */
+  .btn-primary {
+    @apply px-6 py-3 rounded-lg font-medium transition-all duration-300;
+    @apply bg-emerald-500 hover:bg-emerald-600 text-white;
+    @apply shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50;
+  }
+
+  .btn-secondary {
+    @apply px-6 py-3 rounded-lg font-medium transition-all duration-300;
+    @apply glass glass-hover text-white;
+  }
+
+  .btn-error {
+    @apply px-6 py-3 rounded-lg font-medium transition-all duration-300;
+    @apply bg-crimson-500 hover:bg-crimson-600 text-white;
+    @apply shadow-lg shadow-crimson-500/30 hover:shadow-crimson-500/50;
+  }
+}

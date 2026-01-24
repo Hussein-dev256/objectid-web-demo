@@ -73,27 +73,52 @@ export default function AnnotationCanvas({ image, onROIChange }: AnnotationCanva
         return { x, y, width, height };
     }, [image.width, image.height]);
 
+    // Unified start handler for both mouse and touch
+    const handleInteractionStart = useCallback((clientX: number, clientY: number, isDrag: boolean, corner?: string) => {
+        const pos = screenToImage(clientX, clientY);
+        if (isDrag) {
+            setIsDragging(true);
+            setDragStart({ x: pos.x - roi.x, y: pos.y - roi.y });
+        } else if (corner) {
+            setIsResizing(corner);
+        }
+    }, [screenToImage, roi]);
+
     // Handle mouse down on box (for dragging)
     const handleBoxMouseDown = (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
-        const pos = screenToImage(e.clientX, e.clientY);
-        setIsDragging(true);
-        setDragStart({ x: pos.x - roi.x, y: pos.y - roi.y });
+        handleInteractionStart(e.clientX, e.clientY, true);
+    };
+
+    // Handle touch start on box (for dragging)
+    const handleBoxTouchStart = (e: React.TouchEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const touch = e.touches[0];
+        handleInteractionStart(touch.clientX, touch.clientY, true);
     };
 
     // Handle mouse down on corner handle (for resizing)
     const handleHandleMouseDown = (corner: string) => (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
-        setIsResizing(corner);
+        handleInteractionStart(e.clientX, e.clientY, false, corner);
     };
 
-    // Handle mouse move
-    const handleMouseMove = useCallback((e: MouseEvent) => {
+    // Handle touch start on corner handle (for resizing)
+    const handleHandleTouchStart = (corner: string) => (e: React.TouchEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const touch = e.touches[0];
+        handleInteractionStart(touch.clientX, touch.clientY, false, corner);
+    };
+
+    // Unified move handler for both mouse and touch
+    const handleInteractionMove = useCallback((clientX: number, clientY: number) => {
         if (!isDragging && !isResizing) return;
 
-        const pos = screenToImage(e.clientX, e.clientY);
+        const pos = screenToImage(clientX, clientY);
 
         if (isDragging) {
             // Move the entire box
@@ -147,23 +172,44 @@ export default function AnnotationCanvas({ image, onROIChange }: AnnotationCanva
         }
     }, [isDragging, isResizing, dragStart, roi, screenToImage, constrainROI]);
 
-    // Handle mouse up
-    const handleMouseUp = useCallback(() => {
+    // Handle mouse move
+    const handleMouseMove = useCallback((e: MouseEvent) => {
+        handleInteractionMove(e.clientX, e.clientY);
+    }, [handleInteractionMove]);
+
+    // Handle touch move
+    const handleTouchMove = useCallback((e: TouchEvent) => {
+        if (e.touches.length > 0) {
+            e.preventDefault(); // Prevent scrolling while dragging
+            const touch = e.touches[0];
+            handleInteractionMove(touch.clientX, touch.clientY);
+        }
+    }, [handleInteractionMove]);
+
+    // Handle interaction end (mouse up or touch end)
+    const handleInteractionEnd = useCallback(() => {
         setIsDragging(false);
         setIsResizing(null);
     }, []);
 
-    // Add/remove global mouse listeners
+    // Add/remove global mouse and touch listeners
     useEffect(() => {
         if (isDragging || isResizing) {
             window.addEventListener('mousemove', handleMouseMove);
-            window.addEventListener('mouseup', handleMouseUp);
+            window.addEventListener('mouseup', handleInteractionEnd);
+            window.addEventListener('touchmove', handleTouchMove, { passive: false });
+            window.addEventListener('touchend', handleInteractionEnd);
+            window.addEventListener('touchcancel', handleInteractionEnd);
+
             return () => {
                 window.removeEventListener('mousemove', handleMouseMove);
-                window.removeEventListener('mouseup', handleMouseUp);
+                window.removeEventListener('mouseup', handleInteractionEnd);
+                window.removeEventListener('touchmove', handleTouchMove);
+                window.removeEventListener('touchend', handleInteractionEnd);
+                window.removeEventListener('touchcancel', handleInteractionEnd);
             };
         }
-    }, [isDragging, isResizing, handleMouseMove, handleMouseUp]);
+    }, [isDragging, isResizing, handleMouseMove, handleTouchMove, handleInteractionEnd]);
 
     // Zoom controls
     const handleZoomIn = () => setZoom(prev => Math.min(prev + 0.25, 2.5));
@@ -200,7 +246,11 @@ export default function AnnotationCanvas({ image, onROIChange }: AnnotationCanva
                 <div
                     ref={containerRef}
                     className="relative inline-block rounded-lg overflow-hidden shadow-2xl select-none"
-                    style={{ width: displayWidth, height: displayHeight }}
+                    style={{
+                        width: displayWidth,
+                        height: displayHeight,
+                        touchAction: 'none' // Prevents default touch behaviors
+                    }}
                 >
                     {/* Background Image */}
                     <img
@@ -261,8 +311,10 @@ export default function AnnotationCanvas({ image, onROIChange }: AnnotationCanva
                             height: scaledROI.height,
                             borderWidth: 3,
                             borderColor: '#10B981',
+                            touchAction: 'none'
                         }}
                         onMouseDown={handleBoxMouseDown}
+                        onTouchStart={handleBoxTouchStart}
                     />
 
                     {/* Corner Handles */}
@@ -281,8 +333,10 @@ export default function AnnotationCanvas({ image, onROIChange }: AnnotationCanva
                                 width: handleSize,
                                 height: handleSize,
                                 cursor: handle.cursor,
+                                touchAction: 'none'
                             }}
                             onMouseDown={handleHandleMouseDown(handle.name)}
+                            onTouchStart={handleHandleTouchStart(handle.name)}
                         />
                     ))}
                 </div>

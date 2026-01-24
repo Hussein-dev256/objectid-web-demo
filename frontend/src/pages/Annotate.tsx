@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import AnnotationCanvas from '../components/AnnotationCanvas';
-import { createImageElement } from '../utils/imageValidation';
 import { cropImageToROI } from '../utils/cropImage';
 import { recognizeImage } from '../services/api';
 import { MIN_ROI_SIZE_PX } from '../utils/constants';
@@ -27,14 +26,25 @@ export default function Annotate() {
             return;
         }
 
-        // Load the image element
-        createImageElement(file)
-            .then((img) => setImage(img))
-            .catch(() => {
-                navigate('/demo/error', {
-                    state: { error: 'Failed to load image for annotation' },
-                });
+        // Load the image element using the previewUrl directly
+        // This is more reliable on mobile browsers
+        const img = new Image();
+        img.onload = () => {
+            setImage(img);
+        };
+        img.onerror = () => {
+            navigate('/demo/error', {
+                state: { error: 'Failed to load image for annotation' },
             });
+        };
+        img.src = previewUrl;
+
+        // Cleanup: revoke object URL when component unmounts
+        return () => {
+            if (previewUrl.startsWith('blob:')) {
+                URL.revokeObjectURL(previewUrl);
+            }
+        };
     }, [file, previewUrl, navigate]);
 
     const handleRecognize = async () => {

@@ -6,44 +6,139 @@
 
 @layer base {
   * {
-    @apply font-poppins;
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   }
 
   body {
-    @apply bg-charcoal-900 text-white antialiased;
+    background-color: #030304;
+    color: #e4e4e7; /* Zinc 200 */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 }
 
-@layer components {
+/* Restrained, Modern Technical Glass Cards */
+.ui-card,
+.liquid-glass,
+.glass {
+  background: rgba(13, 14, 18, 0.72);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.75rem; /* 12px */
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.6);
+}
 
-  /* Glassmorphism effects */
-  .glass {
-    @apply bg-white/5 backdrop-blur-2xl border border-white/10 rounded-lg;
-  }
+.ui-card-interactive,
+.liquid-glass-card,
+.glass-hover {
+  background: rgba(13, 14, 18, 0.72);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.6);
+  transition: border-color 200ms ease, background-color 200ms ease, transform 200ms ease;
+}
 
-  .glass-hover {
-    @apply transition-all duration-300;
-  }
+.ui-card-interactive:hover,
+.liquid-glass-card:hover,
+.glass-hover:hover {
+  background: rgba(20, 22, 28, 0.85);
+  border-color: rgba(255, 255, 255, 0.16);
+}
 
-  .glass-hover:hover {
-    @apply bg-white/10 border-white/20;
-  }
+/* Subtle Dark Background for Internal Pages */
+.shiny-dark-bg {
+  background-color: #030304;
+  background-image: radial-gradient(ellipse at 50% 0%, rgba(16, 185, 129, 0.05) 0%, transparent 50%);
+}
 
-  /* Button styles */
-  .btn-primary {
-    @apply px-6 py-3 rounded-lg font-medium transition-all duration-300;
-    @apply bg-emerald-500 hover:bg-emerald-600 text-white;
-    @apply shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50;
-  }
+/* Compact, Professional Application Buttons */
+.btn-primary,
+.btn-liquid-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  height: 2.375rem; /* 38px */
+  padding: 0 1rem;
+  border-radius: 0.5rem; /* 8px */
+  font-size: 0.8125rem; /* 13px */
+  font-weight: 500;
+  color: #ffffff;
+  background-color: #059669; /* Emerald 600 */
+  border: 1px solid rgba(52, 211, 153, 0.3);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  transition: all 150ms ease;
+  cursor: pointer;
+}
 
-  .btn-secondary {
-    @apply px-6 py-3 rounded-lg font-medium transition-all duration-300;
-    @apply glass glass-hover text-white;
-  }
+.btn-primary:hover,
+.btn-liquid-primary:hover {
+  background-color: #10b981; /* Emerald 500 */
+  border-color: rgba(52, 211, 153, 0.5);
+}
 
-  .btn-error {
-    @apply px-6 py-3 rounded-lg font-medium transition-all duration-300;
-    @apply bg-crimson-500 hover:bg-crimson-600 text-white;
-    @apply shadow-lg shadow-crimson-500/30 hover:shadow-crimson-500/50;
-  }
+.btn-primary:active,
+.btn-liquid-primary:active {
+  transform: translateY(1px);
+  background-color: #047857; /* Emerald 700 */
+}
+
+.btn-secondary,
+.btn-liquid-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  height: 2.375rem; /* 38px */
+  padding: 0 1rem;
+  border-radius: 0.5rem; /* 8px */
+  font-size: 0.8125rem; /* 13px */
+  font-weight: 500;
+  color: #d4d4d8; /* Zinc 300 */
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  transition: all 150ms ease;
+  cursor: pointer;
+}
+
+.btn-secondary:hover,
+.btn-liquid-secondary:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+}
+
+.btn-secondary:active,
+.btn-liquid-secondary:active {
+  transform: translateY(1px);
+}
+
+.btn-error,
+.btn-liquid-error {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  height: 2.375rem;
+  padding: 0 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #ffffff;
+  background-color: #dc2626; /* Red 600 */
+  border: 1px solid rgba(248, 113, 113, 0.3);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  transition: all 150ms ease;
+  cursor: pointer;
+}
+
+.btn-error:hover,
+.btn-liquid-error:hover {
+  background-color: #ef4444;
 }

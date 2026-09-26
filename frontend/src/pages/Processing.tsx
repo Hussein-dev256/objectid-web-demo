@@ -1,33 +1,27 @@
-import { motion } from 'framer-motion';
+import { Loader2 } from 'lucide-react';
 
 export default function Processing() {
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center px-4">
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="text-center space-y-8"
-            >
-                {/* Animated Spinner */}
-                <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
-                    className="w-20 h-20 border-4 border-glass border-t-emerald-500 rounded-full mx-auto"
-                />
+        <div className="flex-1 flex flex-col items-center justify-center px-4 py-12 max-w-sm w-full mx-auto text-center">
+            <div className="w-full ui-card p-6 space-y-4">
+                <div className="w-10 h-10 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center mx-auto text-emerald-400">
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                </div>
 
-                <div className="space-y-2">
-                    <h2 className="text-3xl font-semibold">Analyzing Image...</h2>
-                    <p className="text-gray-400">
-                        Our AI is identifying objects in your image
+                <div className="space-y-1">
+                    <h2 className="text-base font-semibold text-white">
+                        Analyzing Region
+                    </h2>
+                    <p className="text-xs text-zinc-400">
+                        Querying Imagga AI tagging endpoint...
                     </p>
                 </div>
 
-                <div className="glass p-6 max-w-md mx-auto">
-                    <p className="text-sm text-gray-300">
-                        This usually takes just a few seconds
-                    </p>
+                <div className="bg-black/40 rounded p-2.5 border border-white/[0.06] text-[11px] text-zinc-400 flex items-center justify-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    <span>Extracting visual features</span>
                 </div>
-            </motion.div>
+            </div>
         </div>
     );
 }

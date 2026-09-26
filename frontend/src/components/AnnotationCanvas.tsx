@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { ZoomIn, ZoomOut, Target } from 'lucide-react';
 import { DEFAULT_ROI_PERCENTAGE, MIN_ROI_SIZE_PX } from '../utils/constants';
 import type { ROI } from '../types/api';
+
 
 interface AnnotationCanvasProps {
     image: HTMLImageElement;
@@ -15,23 +17,37 @@ export default function AnnotationCanvas({ image, onROIChange }: AnnotationCanva
     const [isResizing, setIsResizing] = useState<string | null>(null);
     const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
-    // Calculate scale to fit image nicely on screen
-    const maxWidth = Math.min(window.innerWidth - 100, 700);
-    const maxHeight = Math.min(window.innerHeight - 350, 450);
+    const [windowSize, setWindowSize] = useState({
+        width: typeof window !== 'undefined' ? window.innerWidth : 800,
+        height: typeof window !== 'undefined' ? window.innerHeight : 600,
+    });
+
+    useEffect(() => {
+        const handleResize = () => {
+            setWindowSize({
+                width: window.innerWidth,
+                height: window.innerHeight,
+            });
+        };
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    const maxWidth = Math.min(windowSize.width - 32, 680);
+    const maxHeight = Math.min(windowSize.height - 300, 420);
     const scaleToFitWidth = maxWidth / image.width;
     const scaleToFitHeight = maxHeight / image.height;
     const baseScale = Math.min(scaleToFitWidth, scaleToFitHeight, 1);
     const scale = baseScale * zoom;
-    const displayWidth = image.width * scale;
-    const displayHeight = image.height * scale;
+    const displayWidth = Math.round(image.width * scale);
+    const displayHeight = Math.round(image.height * scale);
 
-    // Initialize ROI centered on image
     useEffect(() => {
-        const initialWidth = image.width * DEFAULT_ROI_PERCENTAGE;
-        const initialHeight = image.height * DEFAULT_ROI_PERCENTAGE;
+        const initialWidth = Math.round(image.width * DEFAULT_ROI_PERCENTAGE);
+        const initialHeight = Math.round(image.height * DEFAULT_ROI_PERCENTAGE);
         const initialROI = {
-            x: (image.width - initialWidth) / 2,
-            y: (image.height - initialHeight) / 2,
+            x: Math.round((image.width - initialWidth) / 2),
+            y: Math.round((image.height - initialHeight) / 2),
             width: initialWidth,
             height: initialHeight,
         };
@@ -39,12 +55,10 @@ export default function AnnotationCanvas({ image, onROIChange }: AnnotationCanva
         onROIChange(initialROI);
     }, [image]);
 
-    // Update parent when ROI changes
     useEffect(() => {
         onROIChange(roi);
     }, [roi, onROIChange]);
 
-    // Convert screen coordinates to image coordinates
     const screenToImage = useCallback((screenX: number, screenY: number) => {
         const container = containerRef.current;
         if (!container) return { x: 0, y: 0 };
@@ -55,16 +69,13 @@ export default function AnnotationCanvas({ image, onROIChange }: AnnotationCanva
         };
     }, [scale]);
 
-    // Constrain ROI to image bounds
     const constrainROI = useCallback((newROI: ROI): ROI => {
         const minSize = MIN_ROI_SIZE_PX;
         let { x, y, width, height } = newROI;
 
-        // Ensure minimum size
         width = Math.max(minSize, width);
         height = Math.max(minSize, height);
 
-        // Ensure within bounds
         x = Math.max(0, Math.min(x, image.width - width));
         y = Math.max(0, Math.min(y, image.height - height));
         width = Math.min(width, image.width - x);
@@ -73,7 +84,6 @@ export default function AnnotationCanvas({ image, onROIChange }: AnnotationCanva
         return { x, y, width, height };
     }, [image.width, image.height]);
 
-    // Unified start handler for both mouse and touch
     const handleInteractionStart = useCallback((clientX: number, clientY: number, isDrag: boolean, corner?: string) => {
         const pos = screenToImage(clientX, clientY);
         if (isDrag) {
@@ -84,14 +94,12 @@ export default function AnnotationCanvas({ image, onROIChange }: AnnotationCanva
         }
     }, [screenToImage, roi]);
 
-    // Handle mouse down on box (for dragging)
     const handleBoxMouseDown = (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
         handleInteractionStart(e.clientX, e.clientY, true);
     };
 
-    // Handle touch start on box (for dragging)
     const handleBoxTouchStart = (e: React.TouchEvent) => {
         e.preventDefault();
         e.stopPropagation();
@@ -99,14 +107,12 @@ export default function AnnotationCanvas({ image, onROIChange }: AnnotationCanva
         handleInteractionStart(touch.clientX, touch.clientY, true);
     };
 
-    // Handle mouse down on corner handle (for resizing)
     const handleHandleMouseDown = (corner: string) => (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
         handleInteractionStart(e.clientX, e.clientY, false, corner);
     };
 
-    // Handle touch start on corner handle (for resizing)
     const handleHandleTouchStart = (corner: string) => (e: React.TouchEvent) => {
         e.preventDefault();
         e.stopPropagation();
@@ -114,14 +120,12 @@ export default function AnnotationCanvas({ image, onROIChange }: AnnotationCanva
         handleInteractionStart(touch.clientX, touch.clientY, false, corner);
     };
 
-    // Unified move handler for both mouse and touch
     const handleInteractionMove = useCallback((clientX: number, clientY: number) => {
         if (!isDragging && !isResizing) return;
 
         const pos = screenToImage(clientX, clientY);
 
         if (isDragging) {
-            // Move the entire box
             const newROI = constrainROI({
                 x: pos.x - dragStart.x,
                 y: pos.y - dragStart.y,
@@ -130,7 +134,6 @@ export default function AnnotationCanvas({ image, onROIChange }: AnnotationCanva
             });
             setROI(newROI);
         } else if (isResizing) {
-            // Resize from the corner being dragged
             let newROI = { ...roi };
 
             switch (isResizing) {
@@ -172,27 +175,23 @@ export default function AnnotationCanvas({ image, onROIChange }: AnnotationCanva
         }
     }, [isDragging, isResizing, dragStart, roi, screenToImage, constrainROI]);
 
-    // Handle mouse move
     const handleMouseMove = useCallback((e: MouseEvent) => {
         handleInteractionMove(e.clientX, e.clientY);
     }, [handleInteractionMove]);
 
-    // Handle touch move
     const handleTouchMove = useCallback((e: TouchEvent) => {
         if (e.touches.length > 0) {
-            e.preventDefault(); // Prevent scrolling while dragging
+            e.preventDefault();
             const touch = e.touches[0];
             handleInteractionMove(touch.clientX, touch.clientY);
         }
     }, [handleInteractionMove]);
 
-    // Handle interaction end (mouse up or touch end)
     const handleInteractionEnd = useCallback(() => {
         setIsDragging(false);
         setIsResizing(null);
     }, []);
 
-    // Add/remove global mouse and touch listeners
     useEffect(() => {
         if (isDragging || isResizing) {
             window.addEventListener('mousemove', handleMouseMove);
@@ -211,12 +210,21 @@ export default function AnnotationCanvas({ image, onROIChange }: AnnotationCanva
         }
     }, [isDragging, isResizing, handleMouseMove, handleTouchMove, handleInteractionEnd]);
 
-    // Zoom controls
-    const handleZoomIn = () => setZoom(prev => Math.min(prev + 0.25, 2.5));
+    const handleZoomIn = () => setZoom(prev => Math.min(prev + 0.25, 2.0));
     const handleZoomOut = () => setZoom(prev => Math.max(prev - 0.25, 0.5));
     const handleZoomReset = () => setZoom(1);
 
-    // Calculate scaled ROI for display
+    const handleCenterROI = () => {
+        const width = Math.round(image.width * DEFAULT_ROI_PERCENTAGE);
+        const height = Math.round(image.height * DEFAULT_ROI_PERCENTAGE);
+        setROI({
+            x: Math.round((image.width - width) / 2),
+            y: Math.round((image.height - height) / 2),
+            width,
+            height,
+        });
+    };
+
     const scaledROI = {
         x: roi.x * scale,
         y: roi.y * scale,
@@ -227,50 +235,72 @@ export default function AnnotationCanvas({ image, onROIChange }: AnnotationCanva
     const handleSize = 12;
 
     return (
-        <div className="space-y-4">
-            {/* Zoom Controls */}
-            <div className="flex justify-center gap-3">
-                <button onClick={handleZoomOut} className="px-4 py-2 glass rounded-lg text-sm font-medium hover:bg-white/10">
-                    🔍 −
+        <div className="space-y-3 w-full flex flex-col items-center">
+            {/* Viewfinder Controls Toolbar */}
+            <div className="flex items-center gap-1.5 ui-card px-2.5 py-1">
+                <button
+                    onClick={handleZoomOut}
+                    className="p-1.5 hover:bg-white/[0.08] rounded text-zinc-400 hover:text-white transition-colors"
+                    title="Zoom Out"
+                >
+                    <ZoomOut className="w-3.5 h-3.5" />
                 </button>
-                <button onClick={handleZoomReset} className="px-4 py-2 glass rounded-lg text-sm font-medium hover:bg-white/10">
+
+                <button
+                    onClick={handleZoomReset}
+                    className="px-2 py-0.5 text-[11px] font-mono font-medium text-zinc-300 hover:bg-white/[0.08] rounded transition-colors"
+                >
                     {Math.round(zoom * 100)}%
                 </button>
-                <button onClick={handleZoomIn} className="px-4 py-2 glass rounded-lg text-sm font-medium hover:bg-white/10">
-                    🔍 +
+
+                <button
+                    onClick={handleZoomIn}
+                    className="p-1.5 hover:bg-white/[0.08] rounded text-zinc-400 hover:text-white transition-colors"
+                    title="Zoom In"
+                >
+                    <ZoomIn className="w-3.5 h-3.5" />
+                </button>
+
+                <div className="w-[1px] h-3 bg-white/[0.1] mx-1" />
+
+                <button
+                    onClick={handleCenterROI}
+                    className="flex items-center gap-1 px-2 py-1 hover:bg-white/[0.08] rounded text-[11px] text-zinc-400 hover:text-white transition-colors"
+                >
+                    <Target className="w-3 h-3 text-emerald-400" />
+                    <span>Center</span>
                 </button>
             </div>
 
             {/* Canvas Container */}
-            <div className="flex justify-center">
+            <div className="relative rounded-lg overflow-hidden p-1.5 ui-card bg-black/60 max-w-full">
                 <div
                     ref={containerRef}
-                    className="relative inline-block rounded-lg overflow-hidden shadow-2xl select-none"
+                    className="relative inline-block rounded overflow-hidden select-none max-w-full"
                     style={{
                         width: displayWidth,
                         height: displayHeight,
-                        touchAction: 'none' // Prevents default touch behaviors
+                        touchAction: 'none',
                     }}
                 >
-                    {/* Background Image */}
                     <img
                         src={image.src}
                         alt="Annotate"
-                        className="block"
+                        className="block max-w-none"
                         style={{ width: displayWidth, height: displayHeight }}
                         draggable={false}
                     />
 
-                    {/* Dark Overlay - Top */}
+                    {/* Darkened Mask Overlays */}
                     <div
                         className="absolute bg-black/60 pointer-events-none"
                         style={{
-                            left: 0, top: 0,
+                            left: 0,
+                            top: 0,
                             width: displayWidth,
                             height: scaledROI.y,
                         }}
                     />
-                    {/* Dark Overlay - Bottom */}
                     <div
                         className="absolute bg-black/60 pointer-events-none"
                         style={{
@@ -280,7 +310,6 @@ export default function AnnotationCanvas({ image, onROIChange }: AnnotationCanva
                             height: displayHeight - scaledROI.y - scaledROI.height,
                         }}
                     />
-                    {/* Dark Overlay - Left */}
                     <div
                         className="absolute bg-black/60 pointer-events-none"
                         style={{
@@ -290,7 +319,6 @@ export default function AnnotationCanvas({ image, onROIChange }: AnnotationCanva
                             height: scaledROI.height,
                         }}
                     />
-                    {/* Dark Overlay - Right */}
                     <div
                         className="absolute bg-black/60 pointer-events-none"
                         style={{
@@ -301,23 +329,26 @@ export default function AnnotationCanvas({ image, onROIChange }: AnnotationCanva
                         }}
                     />
 
-                    {/* ROI Box - Draggable Area */}
+                    {/* Restrained ROI Bounding Box */}
                     <div
-                        className="absolute border-3 border-emerald-500 cursor-move"
+                        className="absolute cursor-move border border-emerald-400 bg-emerald-500/[0.08]"
                         style={{
                             left: scaledROI.x,
                             top: scaledROI.y,
                             width: scaledROI.width,
                             height: scaledROI.height,
-                            borderWidth: 3,
-                            borderColor: '#10B981',
-                            touchAction: 'none'
+                            touchAction: 'none',
                         }}
                         onMouseDown={handleBoxMouseDown}
                         onTouchStart={handleBoxTouchStart}
-                    />
+                    >
+                        {/* Compact HUD Tag */}
+                        <div className="absolute -top-5 left-0 bg-zinc-900/95 text-emerald-400 border border-emerald-500/30 text-[10px] font-mono px-1.5 py-0.5 rounded shadow pointer-events-none whitespace-nowrap">
+                            {Math.round(roi.width)} × {Math.round(roi.height)} px
+                        </div>
+                    </div>
 
-                    {/* Corner Handles */}
+                    {/* 4 Clean Corner Handles with Expanded Touch Area */}
                     {[
                         { name: 'top-left', left: scaledROI.x - handleSize / 2, top: scaledROI.y - handleSize / 2, cursor: 'nwse-resize' },
                         { name: 'top-right', left: scaledROI.x + scaledROI.width - handleSize / 2, top: scaledROI.y - handleSize / 2, cursor: 'nesw-resize' },
@@ -326,18 +357,20 @@ export default function AnnotationCanvas({ image, onROIChange }: AnnotationCanva
                     ].map((handle) => (
                         <div
                             key={handle.name}
-                            className="absolute bg-emerald-500 border-2 border-white rounded-full shadow-lg"
+                            className="absolute flex items-center justify-center -m-1 p-1 cursor-pointer"
                             style={{
                                 left: handle.left,
                                 top: handle.top,
-                                width: handleSize,
-                                height: handleSize,
+                                width: handleSize + 8,
+                                height: handleSize + 8,
                                 cursor: handle.cursor,
-                                touchAction: 'none'
+                                touchAction: 'none',
                             }}
                             onMouseDown={handleHandleMouseDown(handle.name)}
                             onTouchStart={handleHandleTouchStart(handle.name)}
-                        />
+                        >
+                            <div className="w-2.5 h-2.5 bg-emerald-400 border border-zinc-900 rounded-sm pointer-events-none shadow" />
+                        </div>
                     ))}
                 </div>
             </div>

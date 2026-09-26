@@ -5,13 +5,15 @@ import Annotate from './pages/Annotate';
 import Processing from './pages/Processing';
 import Results from './pages/Results';
 import Error from './pages/Error';
+import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 
 function App() {
   return (
     <BrowserRouter>
-      <div className="min-h-screen bg-charcoal-900 flex flex-col">
-        <main className="flex-1">
+      <div className="min-h-screen bg-onyx-950 shiny-dark-bg text-white flex flex-col selection:bg-emerald-500/30 selection:text-emerald-200">
+        <Navbar />
+        <main className="flex-1 flex flex-col">
           <Routes>
             <Route path="/" element={<Landing />} />
             <Route path="/demo/input" element={<ImageInput />} />
@@ -29,3 +31,4 @@ function App() {
 }
 
 export default App;
+
